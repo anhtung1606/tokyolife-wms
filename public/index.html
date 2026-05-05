@@ -1,0 +1,1642 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TokyoLife - Hệ Thống Quản Lý Kho</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* TokyoLife WMS */
+:root {
+  --primary:#C8102E;--primary-dark:#a00d24;--primary-light:#fde8ec;
+  --accent:#1a1a2e;--bg:#f4f5f7;--card:#ffffff;
+  --text:#1a1a2e;--text-muted:#6b7280;--border:#e5e7eb;
+  --success:#059669;--success-bg:#d1fae5;
+  --warning:#d97706;--warning-bg:#fef3c7;
+  --danger:#dc2626;--danger-bg:#fee2e2;
+  --info:#2563eb;--info-bg:#dbeafe;
+  --sidebar-w:240px;--radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Be Vietnam Pro',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--accent);color:#fff;display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto;}
+.sidebar-logo{padding:20px 16px 16px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:10px;}
+.logo-icon{width:36px;height:36px;background:var(--primary);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;}
+.logo-text{font-size:15px;font-weight:700;letter-spacing:.5px;}
+.logo-sub{font-size:10px;color:rgba(255,255,255,.5);margin-top:1px;}
+.nav-section{padding:12px 0;}
+.nav-label{font-size:10px;font-weight:600;color:rgba(255,255,255,.35);padding:8px 16px 4px;letter-spacing:1px;text-transform:uppercase;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 16px;cursor:pointer;font-size:13.5px;color:rgba(255,255,255,.65);transition:all .15s;border-left:3px solid transparent;user-select:none;}
+.nav-item:hover{background:rgba(255,255,255,.07);color:#fff;}
+.nav-item.active{background:rgba(200,16,46,.2);color:#fff;border-left-color:var(--primary);}
+.nav-icon{width:18px;text-align:center;font-size:16px;}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;}
+.topbar{background:var(--card);border-bottom:1px solid var(--border);padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50;}
+.topbar-title{font-size:16px;font-weight:600;}
+.topbar-right{display:flex;align-items:center;gap:16px;}
+.user-badge{display:flex;align-items:center;gap:8px;padding:6px 12px;border-radius:8px;border:1px solid var(--border);}
+.user-avatar{width:30px;height:30px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:600;}
+.user-name{font-size:13px;font-weight:500;}
+.page-content{padding:24px;flex:1;}
+.page{display:none;}
+.page.active{display:block;}
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);}
+.card-header{padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.card-title{font-size:14px;font-weight:600;}
+.card-body{padding:20px;}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px;}
+.stat-card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:18px 20px;}
+.stat-label{font-size:12px;color:var(--text-muted);font-weight:500;margin-bottom:8px;}
+.stat-value{font-size:28px;font-weight:700;line-height:1;font-family:'Space Grotesk',sans-serif;}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;font-size:13px;font-weight:500;cursor:pointer;border:none;transition:all .15s;font-family:inherit;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+.btn-secondary{background:var(--bg);color:var(--text);border:1px solid var(--border);}
+.btn-secondary:hover{background:var(--border);}
+.btn-sm{padding:5px 12px;font-size:12px;}
+.btn-danger{background:var(--danger-bg);color:var(--danger);}
+.btn-danger:hover{background:var(--danger);color:#fff;}
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13.5px;}
+th{background:#f8f9fa;padding:10px 14px;text-align:left;font-size:12px;font-weight:600;color:var(--text-muted);border-bottom:1px solid var(--border);white-space:nowrap;}
+td{padding:11px 14px;border-bottom:1px solid var(--border);color:var(--text);vertical-align:middle;}
+tr:last-child td{border-bottom:none;}
+tr:hover td{background:#fafafa;}
+.badge{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;font-size:11.5px;font-weight:600;}
+.badge-success{background:var(--success-bg);color:var(--success);}
+.badge-warning{background:var(--warning-bg);color:var(--warning);}
+.badge-danger{background:var(--danger-bg);color:var(--danger);}
+.badge-info{background:var(--info-bg);color:var(--info);}
+.badge-gray{background:#f3f4f6;color:#374151;}
+.form-group{margin-bottom:16px;}
+.form-label{display:block;font-size:13px;font-weight:500;margin-bottom:6px;}
+.form-control{width:100%;padding:9px 12px;border:1px solid var(--border);border-radius:8px;font-size:13.5px;font-family:inherit;color:var(--text);background:var(--card);transition:border-color .15s;}
+.form-control:focus{outline:none;border-color:var(--primary);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;align-items:center;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--card);border-radius:14px;width:540px;max-width:95vw;max-height:90vh;overflow-y:auto;}
+.modal-header{padding:18px 20px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-size:15px;font-weight:600;}
+.modal-close{width:28px;height:28px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;font-size:16px;}
+.modal-body{padding:20px;}
+.modal-footer{padding:14px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px;}
+#toast{position:fixed;bottom:24px;right:24px;z-index:999;display:flex;flex-direction:column;gap:8px;}
+.toast-item{background:#1a1a2e;color:#fff;padding:12px 18px;border-radius:10px;font-size:13.5px;min-width:260px;display:flex;align-items:center;gap:10px;animation:slideIn .3s ease;}
+.toast-item.success{background:var(--success);}
+.toast-item.error{background:var(--danger);}
+.toast-item.warning{background:var(--warning);}
+@keyframes slideIn{from{transform:translateX(80px);opacity:0;}to{transform:translateX(0);opacity:1;}}
+.search-input{flex:1;max-width:300px;}
+.filter-select{padding:8px 12px;border:1px solid var(--border);border-radius:8px;font-size:13px;font-family:inherit;background:var(--card);}
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:24px;}
+.stock-bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;}
+.stock-fill{height:100%;border-radius:4px;transition:width .3s;}
+.login-screen{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e 0%,#2d1b6e 100%);display:flex;align-items:center;justify-content:center;z-index:9999;}
+.login-box{background:var(--card);border-radius:16px;padding:40px 36px;width:360px;max-width:95vw;}
+.login-logo{text-align:center;margin-bottom:28px;}
+.logo-big{font-size:28px;font-weight:800;color:var(--primary);letter-spacing:1px;}
+.login-logo p{font-size:12px;color:var(--text-muted);margin-top:4px;}
+.login-title{font-size:18px;font-weight:600;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:24px;}
+.tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:20px;}
+.tab{padding:10px 18px;font-size:13.5px;font-weight:500;cursor:pointer;color:var(--text-muted);border-bottom:2px solid transparent;transition:all .15s;}
+.tab.active{color:var(--primary);border-bottom-color:var(--primary);}
+.tab-content{display:none;}
+.tab-content.active{display:block;}
+.alert{padding:12px 16px;border-radius:8px;font-size:13.5px;margin-bottom:12px;display:flex;align-items:center;gap:10px;}
+.alert-warning{background:var(--warning-bg);color:#92400e;border:1px solid #fde68a;}
+.alert-danger{background:var(--danger-bg);color:#7f1d1d;border:1px solid #fca5a5;}
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-muted);}
+.empty-icon{font-size:48px;margin-bottom:12px;}
+.flex-between{display:flex;align-items:center;justify-content:space-between;}
+.mt-16{margin-top:16px;}
+.mb-16{margin-bottom:16px;}
+.text-center{text-align:center;}
+.text-muted{color:var(--text-muted);}
+@media(max-width:768px){
+  .stats-grid{grid-template-columns:1fr 1fr;}
+  .chart-row{grid-template-columns:1fr;}
+  .form-row{grid-template-columns:1fr;}
+  .form-row-3{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="logo-big">TOKYOLIFE</div>
+      <p>Hệ Thống Quản Lý Kho Hàng</p>
+    </div>
+    <p class="login-title">Đăng nhập</p>
+    <p class="login-sub">Nhập thông tin để tiếp tục</p>
+    <div class="form-group">
+      <label class="form-label">Tên đăng nhập</label>
+      <input class="form-control" id="loginUser" value="admin">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Mật khẩu</label>
+      <input class="form-control" id="loginPass" type="password" value="123456">
+    </div>
+    <div id="loginErr" style="color:var(--danger);font-size:13px;margin-bottom:10px;display:none;"></div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;padding:11px;" onclick="doLogin()">Đăng nhập</button>
+    <p style="font-size:11.5px;color:var(--text-muted);text-align:center;margin-top:16px;">Admin: admin/123456 &nbsp;|&nbsp; Nhân viên: nhanvien/123456 &nbsp;|&nbsp; Quản lý: quanly/123456</p>
+  </div>
+</div>
+
+<!-- APP -->
+<div class="layout" id="appLayout" style="display:none;">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">TL</div>
+      <div><div class="logo-text">TOKYOLIFE</div><div class="logo-sub">Quản lý kho hàng</div></div>
+    </div>
+    <nav>
+      <div class="nav-section">
+        <div class="nav-label">Tổng quan</div>
+        <div class="nav-item active nav-role nav-nhanvien nav-quanly" onclick="showPage('dashboard')"><span class="nav-icon">📊</span> Trang chủ</div>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Kho hàng</div>
+        <div class="nav-item nav-role nav-nhanvien nav-quanly" onclick="showPage('products')"><span class="nav-icon">👕</span> Quản lý sản phẩm</div>
+        <div class="nav-item nav-role nav-nhanvien nav-quanly" onclick="showPage('import')"><span class="nav-icon">📦</span> Quản lý nhập kho</div>
+        <div class="nav-item nav-role nav-nhanvien nav-quanly" onclick="showPage('export')"><span class="nav-icon">🚚</span> Quản lý xuất kho</div>
+        <div class="nav-item nav-role nav-quanly" onclick="showPage('inventory')"><span class="nav-icon">🔍</span> Quản lý tồn kho </div>
+  
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Quản trị</div>
+        <div class="nav-item nav-role nav-admin" onclick="showPage('users')"><span class="nav-icon">👥</span> Quản lý tài khoản đăng nhập</div>
+        <div class="nav-item nav-role nav-quanly" onclick="showPage('report')"><span class="nav-icon">📈</span> Báo cáo & Thống kê</div>
+      </div>
+    </nav>
+    <div style="margin-top:auto;padding:16px;border-top:1px solid rgba(255,255,255,0.08);">
+      <div style="font-size:12px;color:rgba(255,255,255,.4);" id="sidebarUser"></div>
+      <button class="btn btn-sm" style="margin-top:8px;background:rgba(255,255,255,.1);color:#fff;border:none;width:100%;justify-content:center;" onclick="doLogout()">Đăng xuất</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <span class="topbar-title" id="topbarTitle">Bảng điều khiển</span>
+      <div class="topbar-right">
+        <span style="font-size:12px;color:var(--text-muted);" id="currentDateTime"></span>
+        <div class="user-badge">
+          <div class="user-avatar" id="avatarInitial">A</div>
+          <span class="user-name" id="userNameDisplay">Admin</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content">
+
+      <!-- DASHBOARD -->
+      <div class="page active" id="page-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card"><div class="stat-label">Tổng sản phẩm</div><div class="stat-value" id="stat-products" style="color:var(--primary);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Tổng tồn kho</div><div class="stat-value" id="stat-stock" style="color:var(--info);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Nhập kho tháng này</div><div class="stat-value" id="stat-imports" style="color:var(--success);">—</div></div>
+          <div class="stat-card"><div class="stat-label">Xuất kho tháng này</div><div class="stat-value" id="stat-exports" style="color:var(--warning);">—</div></div>
+        </div>
+        <div id="dashAlerts"></div>
+        <div class="chart-row">
+          
+        </div>
+        <div class="mt-16">
+          <div class="card">
+            <div class="card-header"><span class="card-title">Giao dịch gần nhất</span></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Thời gian</th><th>Loại</th><th>Sản phẩm</th><th>Số lượng</th><th>Nhân viên</th></tr></thead>
+              <tbody id="recentTxBody"></tbody></table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PRODUCTS -->
+      <div class="page" id="page-products">
+        <div class="flex-between mb-16">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1;">
+            <input class="form-control search-input" id="searchProduct" placeholder="🔍 Tìm tên, mã sản phẩm..." oninput="loadProducts()">
+          </div>
+          <button class="btn btn-primary" style="margin-left:8px;" onclick="openModal('addProduct')">+ Thêm sản phẩm</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Size</th><th>Màu sắc</th><th>Đơn giá</th><th>Nhà cung cấp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody id="productTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- IMPORT -->
+      <div class="page" id="page-import">
+        <div class="flex-between mb-16">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1;">
+            <input class="form-control search-input" id="searchImport" placeholder="🔍 Tìm mã phiếu, sản phẩm..." oninput="loadImports()">
+            <input class="form-control" id="importDateFrom" type="date" title="Từ ngày" onchange="loadImports()" style="width:140px;">
+            <input class="form-control" id="importDateTo" type="date" title="Đến ngày" onchange="loadImports()" style="width:140px;">
+          </div>
+          <button class="btn btn-primary" style="margin-left:8px;" onclick="openAddImport()">+ Tạo phiếu nhập</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Mã phiếu</th><th>Ngày nhập</th><th>Nhà cung cấp</th><th>Số SP</th><th>Tổng tiền</th><th>Nhân viên</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody id="importTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPORT -->
+      <div class="page" id="page-export">
+        <div class="flex-between mb-16">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1;">
+            <input class="form-control search-input" id="searchExport" placeholder="🔍 Tìm mã phiếu, sản phẩm..." oninput="loadExports()">
+            <input class="form-control" id="exportDateFrom" type="date" title="Từ ngày" onchange="loadExports()" style="width:140px;">
+            <input class="form-control" id="exportDateTo" type="date" title="Đến ngày" onchange="loadExports()" style="width:140px;">
+          </div>
+          <button class="btn btn-primary" style="margin-left:8px;" onclick="openAddExport()">+ Tạo phiếu xuất</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Mã phiếu</th><th>Ngày xuất</th><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá</th><th>Tổng tiền</th><th>Lý do</th><th>Chi nhánh</th><th>Nhân viên</th><th>Thao tác</th></tr></thead>
+            <tbody id="exportTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY -->
+      <div class="page" id="page-inventory">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">
+          <input class="form-control search-input" id="searchInventory" placeholder="🔍 Tìm sản phẩm..." oninput="loadInventory()">
+          <select class="filter-select" id="filterStockStatus" onchange="loadInventory()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="ok">Bình thường</option>
+            <option value="low">Sắp hết</option>
+            <option value="out">Hết hàng</option>
+          </select>
+          <select class="filter-select" id="filterInvCategory" onchange="loadInventory()">
+            <option value="">Tất cả danh mục</option>
+            <option>Áo</option><option>Quần</option><option>Váy</option><option>Phụ kiện</option><option>Giày dép</option>
+          </select>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Tổng nhập</th><th>Tổng xuất</th><th>Tồn kho</th><th>Mức tối thiểu</th><th>Trạng thái</th></tr></thead>
+            <tbody id="inventoryTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- USERS -->
+      <div class="page" id="page-users">
+        <div class="flex-between mb-16">
+          <div style="display:flex;gap:8px;flex-wrap:wrap;flex:1;">
+            <input class="form-control search-input" id="searchUser" placeholder="🔍 Tìm tên, email, username..." oninput="loadUsers()">
+            <select class="filter-select" id="filterUserRole" onchange="loadUsers()">
+              <option value="">Tất cả vai trò</option>
+              <option value="admin">Admin</option>
+              <option value="quanly">Quản lý kho</option>
+              <option value="nhanvien">Nhân viên kho</option>
+            </select>
+            <select class="filter-select" id="filterUserStatus" onchange="loadUsers()">
+              <option value="">Tất cả trạng thái</option>
+              <option value="active">Đang làm</option>
+              <option value="inactive">Nghỉ việc</option>
+            </select>
+          </div>
+          <button class="btn btn-primary" style="margin-left:8px;" onclick="openModal('addUser')">+ Thêm nhân viên</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table><thead><tr><th>Mã NV</th><th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Điện thoại</th><th>Ngày vào</th><th>Trạng thái</th><th>Thao tác</th></tr></thead>
+            <tbody id="usersTableBody"></tbody></table>
+          </div>
+        </div>
+      </div>
+
+      <!-- REPORT -->
+      <div class="page" id="page-report">
+        <div class="tabs">
+          <div class="tab active" onclick="switchReportTab('overview',this)">Tổng quan</div>
+          <div class="tab" onclick="switchReportTab('import-report',this)">Báo cáo nhập</div>
+          <div class="tab" onclick="switchReportTab('export-report',this)">Báo cáo xuất</div>
+          <div class="tab" onclick="switchReportTab('product-report',this)">Báo cáo tồn kho</div>
+        </div>
+        <div id="tab-overview" class="tab-content active">
+          <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Tổng giá trị nhập</div><div class="stat-value" id="rep-import-val" style="color:var(--success);font-size:20px;">—</div></div>
+            <div class="stat-card"><div class="stat-label">Tổng giá trị xuất</div><div class="stat-value" id="rep-export-val" style="color:var(--warning);font-size:20px;">—</div></div>
+            <div class="stat-card"><div class="stat-label">Tổng phiếu nhập</div><div class="stat-value" id="rep-import-cnt" style="color:var(--info);">—</div></div>
+            <div class="stat-card"><div class="stat-label">Tổng phiếu xuất</div><div class="stat-value" id="rep-export-cnt" style="color:var(--primary);">—</div></div>
+          </div>
+          <div class="chart-row mt-16">
+            <div class="card"><div class="card-header"><span class="card-title">Giá trị theo tháng</span></div><div class="card-body" id="repChartMonthly"></div></div>
+            <div class="card"><div class="card-header"><span class="card-title">Cơ cấu tồn kho theo danh mục</span></div><div class="card-body" id="repCategoryChart"></div></div>
+          </div>
+        </div>
+        <div id="tab-import-report" class="tab-content">
+          <div class="card"><div class="table-wrap"><table><thead><tr><th>Mã phiếu</th><th>Ngày nhập</th><th>Sản phẩm</th><th>Số lượng</th><th>Giá trị</th><th>Nhà cung cấp</th></tr></thead><tbody id="repImportBody"></tbody></table></div></div>
+        </div>
+        <div id="tab-export-report" class="tab-content">
+          <div class="card"><div class="table-wrap"><table><thead><tr><th>Mã phiếu</th><th>Ngày xuất</th><th>Sản phẩm</th><th>Số lượng</th><th>Giá trị</th><th>Chi nhánh</th></tr></thead><tbody id="repExportBody"></tbody></table></div></div>
+        </div>
+        <div id="tab-product-report" class="tab-content">
+          <div class="card"><div class="table-wrap"><table><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>Tổng nhập</th><th>Tổng xuất</th><th>Tồn kho</th><th>Giá trị tồn</th><th>Trạng thái</th></tr></thead><tbody id="repProductBody"></tbody></table></div></div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- MODALS -->
+<!-- Thêm sản phẩm -->
+<div class="modal-overlay" id="modal-addProduct">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Thêm sản phẩm mới</span><button class="modal-close" onclick="closeModal('addProduct')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tên sản phẩm *</label><input class="form-control" id="p-name" placeholder="Áo Polo Nam Classic"></div>
+        <div class="form-group"><label class="form-label">Danh mục *</label><select class="form-control" id="p-cat"><option>Áo</option><option>Quần</option><option>Váy</option><option>Phụ kiện</option><option>Giày dép</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Size</label><input class="form-control" id="p-size" placeholder="S/M/L/XL"></div>
+        <div class="form-group"><label class="form-label">Màu sắc</label><input class="form-control" id="p-color" placeholder="Đen, Trắng..."></div>
+        <div class="form-group"><label class="form-label">Giới tính</label><select class="form-control" id="p-gender"><option>Nam</option><option>Nữ</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Giá bán (đ) *</label><input class="form-control" id="p-price" type="number" placeholder="299000"></div>
+        <div class="form-group"><label class="form-label">Nhà cung cấp *</label><select class="form-control" id="p-supplier-id"></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Mức tồn tối thiểu</label><input class="form-control" id="p-minstock" type="number" value="20"></div>
+      <div class="form-group"><label class="form-label">Mô tả</label><textarea class="form-control" id="p-desc" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addProduct')">Hủy</button><button class="btn btn-primary" onclick="saveProduct()">Lưu sản phẩm</button></div>
+  </div>
+</div>
+
+<!-- Sửa sản phẩm -->
+<div class="modal-overlay" id="modal-editProduct">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">✏️ Sửa sản phẩm</span><button class="modal-close" onclick="closeModal('editProduct')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ep-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tên sản phẩm *</label><input class="form-control" id="ep-name"></div>
+        <div class="form-group"><label class="form-label">Danh mục *</label><select class="form-control" id="ep-cat"><option>Áo</option><option>Quần</option><option>Váy</option><option>Phụ kiện</option><option>Giày dép</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Size</label><input class="form-control" id="ep-size"></div>
+        <div class="form-group"><label class="form-label">Màu sắc</label><input class="form-control" id="ep-color"></div>
+        <div class="form-group"><label class="form-label">Giới tính</label><select class="form-control" id="ep-gender"><option>Nam</option><option>Nữ</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Giá bán (đ) *</label><input class="form-control" id="ep-price" type="number"></div>
+        <div class="form-group"><label class="form-label">Nhà cung cấp *</label><select class="form-control" id="ep-supplier-id"></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Mức tồn tối thiểu</label><input class="form-control" id="ep-minstock" type="number"></div>
+      <div class="form-group"><label class="form-label">Mô tả</label><textarea class="form-control" id="ep-desc" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editProduct')">Hủy</button><button class="btn btn-primary" onclick="saveEditProduct()">Lưu thay đổi</button></div>
+  </div>
+</div>
+
+<!-- Tạo phiếu nhập -->
+<div class="modal-overlay" id="modal-addImport">
+  <div class="modal" style="width:720px;">
+    <div class="modal-header"><span class="modal-title">Tạo phiếu nhập kho</span><button class="modal-close" onclick="closeModal('addImport')">✕</button></div>
+    <div class="modal-body">
+      <!-- Thông tin chung -->
+      <div style="background:#f0f7ff;border-radius:8px;padding:14px;margin-bottom:16px;border:1px solid #dbeafe;">
+        <p style="font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text);">📋 Thông tin phiếu nhập</p>
+        <div class="form-row-3">
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label">Mã phiếu *</label><input class="form-control" id="imp-code" placeholder="NK0001"></div>
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label">Ngày nhập *</label><input class="form-control" id="imp-date" type="date"></div>
+          <div class="form-group" style="margin-bottom:0;"><label class="form-label">Trạng thái *</label><select class="form-control" id="imp-status"><option value="pending">Chờ duyệt</option><option value="completed">Hoàn thành</option><option value="cancelled">Hủy</option></select></div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nhà cung cấp *</label><select class="form-control" id="imp-supplier"></select></div>
+        <div class="form-group"><label class="form-label">Nhân viên nhập *</label><select class="form-control" id="imp-staff"></select></div>
+      </div>
+      <!-- Thêm sản phẩm -->
+      <div style="background:#f8f9fa;border-radius:8px;padding:14px;margin-bottom:16px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <p style="font-size:13px;font-weight:600;color:var(--text);">➕ Thêm sản phẩm vào phiếu</p>
+          <button class="btn btn-sm" style="background:var(--info-bg);color:var(--info);" onclick="openModal('addProductFromImport')">+ Thêm SP mới</button>
+        </div>
+        <div class="form-row-3" style="margin-bottom:8px;">
+          <div class="form-group" style="margin:0;"><label class="form-label">Sản phẩm</label><select class="form-control" id="imp-product" onchange="fillImportPrice()"></select></div>
+          <div class="form-group" style="margin:0;"><label class="form-label">Số lượng</label><input class="form-control" id="imp-qty" type="number" placeholder="100" oninput="calcImportTotal()"></div>
+          <div class="form-group" style="margin:0;"><label class="form-label">Đơn giá nhập (đ)</label><input class="form-control" id="imp-price" type="number" oninput="calcImportTotal()"></div>
+        </div>
+        <div class="flex-between">
+          <span style="font-size:13px;color:var(--text-muted);">Thành tiền: <b id="imp-preview-total" style="color:var(--success);">0đ</b></span>
+          <button class="btn btn-secondary btn-sm" onclick="addImportItem()">+ Thêm vào phiếu</button>
+        </div>
+      </div>
+      <!-- Danh sách sản phẩm -->
+      <div class="table-wrap" style="margin-bottom:14px;">
+        <table><thead><tr><th>Mã SP</th><th>Tên sản phẩm</th><th>SL</th><th>Đơn giá</th><th>Thành tiền</th><th></th></tr></thead>
+        <tbody id="importItemsBody"><tr><td colspan="6" class="text-center text-muted" style="padding:16px;">Chưa có sản phẩm nào</td></tr></tbody></table>
+      </div>
+      <!-- Tổng tiền phiếu -->
+      <div style="background:#f0fdf4;border-radius:8px;padding:12px 16px;margin-bottom:14px;border:1px solid #bbf7d0;display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:14px;font-weight:600;color:var(--text);">Tổng giá trị phiếu nhập:</span>
+        <span id="imp-grand-total" style="font-size:20px;font-weight:700;color:var(--success);">0đ</span>
+      </div>
+      <div class="form-group"><label class="form-label">Ghi chú</label><textarea class="form-control" id="imp-note" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addImport')">Hủy</button><button class="btn btn-primary" onclick="saveImport()">Tạo phiếu</button></div>
+  </div>
+</div>
+
+<!-- Sửa phiếu nhập -->
+<div class="modal-overlay" id="modal-editImport">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">✏️ Sửa phiếu nhập</span><button class="modal-close" onclick="closeModal('editImport')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ei-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Sản phẩm *</label><select class="form-control" id="ei-product"></select></div>
+        <div class="form-group"><label class="form-label">Nhà cung cấp *</label><select class="form-control" id="ei-supplier"></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Số lượng *</label><input class="form-control" id="ei-qty" type="number" oninput="calcEditImportTotal()"></div>
+        <div class="form-group"><label class="form-label">Đơn giá nhập (đ) *</label><input class="form-control" id="ei-price" type="number" oninput="calcEditImportTotal()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tổng tiền</label><input class="form-control" id="ei-total" readonly style="background:#f8f9fa;font-weight:600;color:var(--success);"></div>
+        <div class="form-group"><label class="form-label">Ngày nhập *</label><input class="form-control" id="ei-date" type="date"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Ghi chú</label><textarea class="form-control" id="ei-note" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editImport')">Hủy</button><button class="btn btn-primary" onclick="saveEditImport()">Lưu thay đổi</button></div>
+  </div>
+</div>
+
+<!-- Thêm sản phẩm từ nhập kho (giống hệt modal-addProduct) -->
+<div class="modal-overlay" id="modal-addProductFromImport">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Thêm sản phẩm mới</span><button class="modal-close" onclick="closeModal('addProductFromImport')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tên sản phẩm *</label><input class="form-control" id="pi-name" placeholder="Áo Polo Nam Classic"></div>
+        <div class="form-group"><label class="form-label">Danh mục *</label><select class="form-control" id="pi-cat"><option>Áo</option><option>Quần</option><option>Váy</option><option>Phụ kiện</option><option>Giày dép</option></select></div>
+      </div>
+      <div class="form-row-3">
+        <div class="form-group"><label class="form-label">Size</label><input class="form-control" id="pi-size" placeholder="S/M/L/XL"></div>
+        <div class="form-group"><label class="form-label">Màu sắc</label><input class="form-control" id="pi-color" placeholder="Đen, Trắng..."></div>
+        <div class="form-group"><label class="form-label">Giới tính</label><select class="form-control" id="pi-gender"><option>Nam</option><option>Nữ</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Giá bán (đ) *</label><input class="form-control" id="pi-price" type="number" placeholder="299000"></div>
+        <div class="form-group"><label class="form-label">Nhà cung cấp *</label><select class="form-control" id="pi-supplier-id"></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Mức tồn tối thiểu</label><input class="form-control" id="pi-minstock" type="number" value="20"></div>
+      <div class="form-group"><label class="form-label">Mô tả</label><textarea class="form-control" id="pi-desc" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addProductFromImport')">Hủy</button><button class="btn btn-primary" onclick="saveProductFromImport()">Lưu sản phẩm</button></div>
+  </div>
+</div>
+
+<!-- Tạo phiếu xuất -->
+<div class="modal-overlay" id="modal-addExport">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Tạo phiếu xuất kho</span><button class="modal-close" onclick="closeModal('addExport')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Sản phẩm *</label><select class="form-control" id="exp-product" onchange="fillExportPrice()"></select></div>
+        <div class="form-group"><label class="form-label">Số lượng *</label><input class="form-control" id="exp-qty" type="number" placeholder="50" oninput="calcExportTotal()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Đơn giá (đ) *</label><input class="form-control" id="exp-price" type="number" oninput="calcExportTotal()"></div>
+        <div class="form-group"><label class="form-label">Tổng tiền</label><input class="form-control" id="exp-total" readonly style="background:#f8f9fa;font-weight:600;color:var(--primary);"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Lý do xuất</label><select class="form-control" id="exp-reason"><option>Xuất bán - Chi nhánh</option><option>Trả hàng nhà cung cấp</option><option>Chuyển kho</option><option>Hàng khuyến mãi</option><option>Hàng lỗi - Thanh lý</option></select></div>
+        <div class="form-group"><label class="form-label">Chi nhánh nhận</label><select class="form-control" id="exp-branch"><option>CN Hà Nội - Cầu Giấy</option><option>CN Hà Nội - Hoàn Kiếm</option><option>CN TP.HCM - Q1</option><option>CN TP.HCM - Q7</option><option>CN Đà Nẵng</option><option>CN Hải Phòng</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Ngày xuất *</label><input class="form-control" id="exp-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Ghi chú</label><textarea class="form-control" id="exp-note" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addExport')">Hủy</button><button class="btn btn-primary" onclick="saveExport()">Tạo phiếu xuất</button></div>
+  </div>
+</div>
+
+<!-- Sửa phiếu xuất -->
+<div class="modal-overlay" id="modal-editExport">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">✏️ Sửa phiếu xuất</span><button class="modal-close" onclick="closeModal('editExport')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="ee-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Sản phẩm *</label><select class="form-control" id="ee-product"></select></div>
+        <div class="form-group"><label class="form-label">Số lượng *</label><input class="form-control" id="ee-qty" type="number" oninput="calcEditExportTotal()"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Đơn giá (đ) *</label><input class="form-control" id="ee-price" type="number" oninput="calcEditExportTotal()"></div>
+        <div class="form-group"><label class="form-label">Tổng tiền</label><input class="form-control" id="ee-total" readonly style="background:#f8f9fa;font-weight:600;color:var(--primary);"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Lý do xuất</label><select class="form-control" id="ee-reason"><option>Xuất bán - Chi nhánh</option><option>Trả hàng nhà cung cấp</option><option>Chuyển kho</option><option>Hàng khuyến mãi</option><option>Hàng lỗi - Thanh lý</option></select></div>
+        <div class="form-group"><label class="form-label">Chi nhánh nhận</label><select class="form-control" id="ee-branch"><option>CN Hà Nội - Cầu Giấy</option><option>CN Hà Nội - Hoàn Kiếm</option><option>CN TP.HCM - Q1</option><option>CN TP.HCM - Q7</option><option>CN Đà Nẵng</option><option>CN Hải Phòng</option></select></div>
+      </div>
+      <div class="form-group"><label class="form-label">Ngày xuất *</label><input class="form-control" id="ee-date" type="date"></div>
+      <div class="form-group"><label class="form-label">Ghi chú</label><textarea class="form-control" id="ee-note" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editExport')">Hủy</button><button class="btn btn-primary" onclick="saveEditExport()">Lưu thay đổi</button></div>
+  </div>
+</div>
+
+<!-- Thêm nhân viên -->
+<div class="modal-overlay" id="modal-addUser">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Thêm nhân viên</span><button class="modal-close" onclick="closeModal('addUser')">✕</button></div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Họ tên *</label><input class="form-control" id="u-name" placeholder="Nguyễn Văn A"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="u-email" type="email" placeholder="nv@tokyolife.com"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Vai trò *</label><select class="form-control" id="u-role"><option value="admin">Admin</option><option value="quanly">Quản lý kho</option><option value="nhanvien">Nhân viên kho</option></select></div>
+        <div class="form-group"><label class="form-label">Điện thoại</label><input class="form-control" id="u-phone" placeholder="0987654321"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Tên đăng nhập *</label><input class="form-control" id="u-username" placeholder="username"></div>
+        <div class="form-group"><label class="form-label">Mật khẩu *</label><input class="form-control" id="u-pass" type="password" placeholder="Mật khẩu"></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('addUser')">Hủy</button><button class="btn btn-primary" onclick="saveUser()">Thêm nhân viên</button></div>
+  </div>
+</div>
+
+<!-- Sửa nhân viên -->
+<div class="modal-overlay" id="modal-editUser">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">✏️ Sửa tài khoản nhân viên</span><button class="modal-close" onclick="closeModal('editUser')">✕</button></div>
+    <div class="modal-body">
+      <input type="hidden" id="eu-id">
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Họ tên *</label><input class="form-control" id="eu-name"></div>
+        <div class="form-group"><label class="form-label">Email *</label><input class="form-control" id="eu-email" type="email"></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Vai trò *</label><select class="form-control" id="eu-role"><option value="admin">Admin</option><option value="quanly">Quản lý kho</option><option value="nhanvien">Nhân viên kho</option></select></div>
+        <div class="form-group"><label class="form-label">Trạng thái</label><select class="form-control" id="eu-status"><option value="active">Đang làm</option><option value="inactive">Nghỉ việc</option></select></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Điện thoại</label><input class="form-control" id="eu-phone"></div>
+        <div class="form-group"><label class="form-label">Mật khẩu mới <span style="color:var(--text-muted);font-weight:400;">(để trống nếu không đổi)</span></label><input class="form-control" id="eu-pass" type="password" placeholder="Mật khẩu mới..."></div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn btn-secondary" onclick="closeModal('editUser')">Hủy</button><button class="btn btn-primary" onclick="saveEditUser()">Lưu thay đổi</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════
+//  TOKYOLIFE WMS — Pure Frontend (IndexedDB + LocalStorage)
+//  Thay thế hoàn toàn backend Python/MySQL
+//  Chạy được trực tiếp trên GitHub Pages
+// ════════════════════════════════════════════════════════
+
+let currentUser = null;
+let suppliersCache = [];
+let productsCache  = [];
+let DB = null;
+
+// ── Helpers ──────────────────────────────────────────────
+function fmtMoney(n){ return new Intl.NumberFormat('vi-VN').format(Math.round(n||0))+'đ'; }
+function fmtNum(n)  { return new Intl.NumberFormat('vi-VN').format(n||0); }
+function fmtDate(s) { if(!s) return '—'; const d=new Date(s); return isNaN(d)?s:d.toLocaleDateString('vi-VN'); }
+function todayStr() { return new Date().toISOString().split('T')[0]; }
+function daysAgo(n) { const d=new Date(); d.setDate(d.getDate()-n); return d.toISOString().split('T')[0]; }
+
+function toast(msg, type='success'){
+  const el=document.createElement('div');
+  el.className='toast-item '+type;
+  el.innerHTML=(type==='success'?'✓':type==='error'?'✗':'⚠')+' '+msg;
+  document.getElementById('toast').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+function openModal(id){ document.getElementById('modal-'+id).classList.add('open'); }
+function closeModal(id){ document.getElementById('modal-'+id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m=>
+  m.addEventListener('click',e=>{ if(e.target===m) m.classList.remove('open'); })
+);
+
+function populateSelect(elId, options){
+  const sel=document.getElementById(elId);
+  if(!sel) return;
+  sel.innerHTML=options.map(o=>`<option value="${o.value}">${o.label}</option>`).join('');
+}
+
+function updateDateTime(){
+  const el=document.getElementById('currentDateTime');
+  if(el) el.textContent=new Date().toLocaleString('vi-VN');
+}
+
+function stockBadge(s){
+  if(s==='out') return '<span class="badge badge-danger">Hết hàng</span>';
+  if(s==='low') return '<span class="badge badge-warning">Sắp hết</span>';
+  return '<span class="badge badge-success">Còn hàng</span>';
+}
+
+const pageTitles={
+  dashboard:'Bảng điều khiển',products:'Quản lý sản phẩm',
+  import:'Nhập kho',export:'Xuất kho',inventory:'Tồn kho',
+  stockcheck:'Kiểm kê kho',users:'Quản lý nhân viên',report:'Báo cáo & Thống kê'
+};
+
+function showPage(id){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n=>{
+    if(n.getAttribute('onclick')?.includes(`'${id}'`)) n.classList.add('active');
+  });
+  document.getElementById('topbarTitle').textContent=pageTitles[id]||id;
+  ({
+    dashboard:loadDashboard,products:loadProducts,
+    import:loadImports,export:loadExports,
+    inventory:loadInventory,stockcheck:renderStockCheckEmpty,
+    users:loadUsers,report:loadReport,
+  }[id]||(() =>{}))();
+}
+
+// ════════════════════════════════════════════════════════
+//  API Call — Database layer (kết nối với Node.js Backend)
+// ════════════════════════════════════════════════════════
+async function openDB(){
+  return true; // Không cần khởi tạo IndexedDB nữa
+}
+
+async function dbGetAll(store){
+  const res = await fetch('/api/' + store);
+  return res.json();
+}
+async function dbGet(store,id){
+  const res = await fetch('/api/' + store + '/' + id);
+  return res.json();
+}
+async function dbPut(store,obj){
+  const res = await fetch('/api/' + store, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(obj)
+  });
+  return res.json();
+}
+async function dbDelete(store,id){
+  const res = await fetch('/api/' + store + '/' + id, { method: 'DELETE' });
+  return res.json();
+}
+
+// Tạo ID tự động
+async function nextId(prefix, store, digits=3){
+  const all=await dbGetAll(store);
+  const nums=all.map(r=>parseInt(r.id.replace(prefix,''))||0);
+  const next=(nums.length?Math.max(...nums):0)+1;
+  return prefix+String(next).padStart(digits,'0');
+}
+
+// ════════════════════════════════════════════════════════
+//  Seed Data (dữ liệu mẫu từ schema.sql)
+// ════════════════════════════════════════════════════════
+async function seedData(){
+  const existing=await dbGetAll('users');
+  if(existing.length) return; // Đã có dữ liệu, không seed lại
+
+  // Suppliers
+  const suppliers=[
+    {id:'NCC001',name:'Công ty May Việt Tiến',phone:'02838297310',email:'contact@viettien.com.vn',address:'TP.HCM',status:'active'},
+    {id:'NCC002',name:'Nhà máy TNG Holdings',phone:'02083827100',email:'info@tng.com.vn',address:'Thái Nguyên',status:'active'},
+    {id:'NCC003',name:'Xưởng May Tinh Lợi',phone:'02836363636',email:'tinhloi@gmail.com',address:'TP.HCM',status:'active'},
+    {id:'NCC004',name:'Tập đoàn Crystal Martin',phone:'02836868686',email:'crystal@cm.com',address:'TP.HCM',status:'active'},
+    {id:'NCC005',name:'Công ty Dệt Phong Phú',phone:'02838274422',email:'phongphu@pp.com.vn',address:'TP.HCM',status:'active'},
+  ];
+  for(const s of suppliers) await dbPut('suppliers',s);
+
+  // Users
+  const users=[
+    {id:'NV001',name:'Nguyễn Minh Tuấn',email:'tuan.nm@tokyolife.com',role:'admin',username:'admin',password:'123456',phone:'0912345678',join_date:'2022-03-15',status:'active'},
+    {id:'NV002',name:'Trần Thị Hương',email:'huong.tt@tokyolife.com',role:'nhanvien',username:'nhanvien',password:'123456',phone:'0987654321',join_date:'2022-08-01',status:'active'},
+    {id:'NV003',name:'Lê Văn Đức',email:'duc.lv@tokyolife.com',role:'nhanvien',username:'levanduc',password:'123456',phone:'0901234567',join_date:'2023-01-10',status:'active'},
+    {id:'NV004',name:'Phạm Thị Lan',email:'lan.pt@tokyolife.com',role:'nhanvien',username:'phamlan',password:'123456',phone:'0976543210',join_date:'2023-06-20',status:'active'},
+    {id:'NV005',name:'Hoàng Văn Bình',email:'binh.hv@tokyolife.com',role:'quanly',username:'quanly',password:'123456',phone:'0932109876',join_date:'2021-11-05',status:'active'},
+  ];
+  for(const u of users) await dbPut('users',u);
+
+  // Products
+  const products=[
+    {id:'SP001',name:'Áo Polo Nam Classic Tokyo',category:'Áo',size:'M/L/XL/XXL',color:'Đen, Trắng, Navy',gender:'Nam',price:299000,supplier_id:'NCC001',min_stock:30,description:'Áo polo nam vải cotton cao cấp',status:'active'},
+    {id:'SP002',name:'Áo Phông Nữ Basic Pastel',category:'Áo',size:'S/M/L/XL',color:'Hồng, Xanh mint, Trắng',gender:'Nữ',price:199000,supplier_id:'NCC002',min_stock:40,description:'Áo phông nữ vải cotton mềm mại',status:'active'},
+    {id:'SP003',name:'Quần Kaki Nam Regular',category:'Quần',size:'28/30/32/34',color:'Be, Xám, Đen',gender:'Nam',price:459000,supplier_id:'NCC003',min_stock:25,description:'Quần kaki nam chất liệu cotton pha',status:'active'},
+    {id:'SP004',name:'Quần Jeans Nữ Skinny Wash',category:'Quần',size:'25/26/27/28/29',color:'Xanh nhạt, Xanh đậm',gender:'Nữ',price:549000,supplier_id:'NCC004',min_stock:20,description:'Quần jeans nữ form skinny',status:'active'},
+    {id:'SP005',name:'Váy Midi Floral Nữ',category:'Váy',size:'S/M/L',color:'Hoa nhí đỏ, Hoa nhí xanh',gender:'Nữ',price:349000,supplier_id:'NCC002',min_stock:15,description:'Váy midi họa tiết hoa nhí',status:'active'},
+    {id:'SP006',name:'Áo Khoác Bomber Unisex',category:'Áo',size:'S/M/L/XL/XXL',color:'Đen, Xanh rêu, Nâu',gender:'Unisex',price:699000,supplier_id:'NCC004',min_stock:20,description:'Áo khoác bomber phong cách Nhật Bản',status:'active'},
+    {id:'SP007',name:'Quần Short Nam Thể Thao',category:'Quần',size:'S/M/L/XL',color:'Đen, Xám, Navy',gender:'Nam',price:249000,supplier_id:'NCC005',min_stock:35,description:'Quần short nam chất liệu thể thao',status:'active'},
+    {id:'SP008',name:'Áo Len Cổ Lọ Nữ Winter',category:'Áo',size:'S/M/L',color:'Kem, Nâu camel, Xám',gender:'Nữ',price:499000,supplier_id:'NCC001',min_stock:15,description:'Áo len cổ lọ giữ ấm mùa đông',status:'active'},
+    {id:'SP009',name:'Quần Culottes Nữ Linen',category:'Quần',size:'S/M/L/XL',color:'Trắng, Be, Đen',gender:'Nữ',price:379000,supplier_id:'NCC003',min_stock:20,description:'Quần culottes vải linen thoáng mát',status:'active'},
+    {id:'SP010',name:'Mũ Bucket Hat Tokyo',category:'Phụ kiện',size:'Free size',color:'Đen, Kem, Xanh navy',gender:'Unisex',price:159000,supplier_id:'NCC005',min_stock:25,description:'Mũ bucket hat phong cách streetwear',status:'active'},
+    {id:'SP011',name:'Túi Tote Canvas Tokyo',category:'Phụ kiện',size:'One size',color:'Kem, Đen, Xanh',gender:'Unisex',price:199000,supplier_id:'NCC005',min_stock:20,description:'Túi tote canvas thương hiệu TokyoLife',status:'active'},
+    {id:'SP012',name:'Áo Sơ Mi Linen Nam',category:'Áo',size:'S/M/L/XL/XXL',color:'Trắng, Xanh nhạt, Be',gender:'Nam',price:399000,supplier_id:'NCC003',min_stock:25,description:'Áo sơ mi vải linen nhẹ mát mùa hè',status:'active'},
+  ];
+  for(const p of products) await dbPut('products',p);
+
+  // Import receipts
+  const importsData=[
+    {id:'NK0001',product_id:'SP001',quantity:200,unit_price:180000,total_amount:36000000,supplier_id:'NCC001',import_date:daysAgo(25),staff_id:'NV001',note:'Lô hàng tháng 3',status:'completed'},
+    {id:'NK0002',product_id:'SP002',quantity:300,unit_price:110000,total_amount:33000000,supplier_id:'NCC002',import_date:daysAgo(22),staff_id:'NV002',note:'Áo phông nữ mùa hè',status:'completed'},
+    {id:'NK0003',product_id:'SP003',quantity:150,unit_price:280000,total_amount:42000000,supplier_id:'NCC003',import_date:daysAgo(20),staff_id:'NV001',note:'Quần kaki bổ sung',status:'completed'},
+    {id:'NK0004',product_id:'SP004',quantity:180,unit_price:320000,total_amount:57600000,supplier_id:'NCC004',import_date:daysAgo(18),staff_id:'NV003',note:'Jeans nữ skinny',status:'completed'},
+    {id:'NK0005',product_id:'SP005',quantity:120,unit_price:200000,total_amount:24000000,supplier_id:'NCC002',import_date:daysAgo(15),staff_id:'NV002',note:'Váy midi mùa hè',status:'completed'},
+    {id:'NK0006',product_id:'SP006',quantity:100,unit_price:420000,total_amount:42000000,supplier_id:'NCC004',import_date:daysAgo(12),staff_id:'NV001',note:'Bomber jacket mới về',status:'completed'},
+    {id:'NK0007',product_id:'SP007',quantity:250,unit_price:140000,total_amount:35000000,supplier_id:'NCC005',import_date:daysAgo(10),staff_id:'NV004',note:'Quần short hè',status:'completed'},
+    {id:'NK0008',product_id:'SP008',quantity:80,unit_price:280000,total_amount:22400000,supplier_id:'NCC001',import_date:daysAgo(8),staff_id:'NV001',note:'Áo len mùa đông',status:'completed'},
+    {id:'NK0009',product_id:'SP009',quantity:130,unit_price:220000,total_amount:28600000,supplier_id:'NCC003',import_date:daysAgo(6),staff_id:'NV003',note:'Culottes linen',status:'completed'},
+    {id:'NK0010',product_id:'SP010',quantity:200,unit_price:85000,total_amount:17000000,supplier_id:'NCC005',import_date:daysAgo(5),staff_id:'NV002',note:'Mũ bucket hat',status:'completed'},
+    {id:'NK0011',product_id:'SP011',quantity:150,unit_price:100000,total_amount:15000000,supplier_id:'NCC005',import_date:daysAgo(3),staff_id:'NV004',note:'Túi tote canvas',status:'completed'},
+    {id:'NK0012',product_id:'SP012',quantity:160,unit_price:230000,total_amount:36800000,supplier_id:'NCC003',import_date:daysAgo(2),staff_id:'NV001',note:'Áo sơ mi linen',status:'completed'},
+    {id:'NK0013',product_id:'SP001',quantity:100,unit_price:178000,total_amount:17800000,supplier_id:'NCC001',import_date:daysAgo(1),staff_id:'NV002',note:'Bổ sung áo polo',status:'completed'},
+  ];
+  for(const r of importsData) await dbPut('imports',r);
+
+  // Export receipts
+  const exportsData=[
+    {id:'XK0001',product_id:'SP001',quantity:80,unit_price:299000,total_amount:23920000,reason:'Xuất bán - Chi nhánh',branch:'CN Hà Nội - Cầu Giấy',export_date:daysAgo(20),staff_id:'NV002',note:''},
+    {id:'XK0002',product_id:'SP002',quantity:120,unit_price:199000,total_amount:23880000,reason:'Xuất bán - Chi nhánh',branch:'CN TP.HCM - Q1',export_date:daysAgo(18),staff_id:'NV003',note:''},
+    {id:'XK0003',product_id:'SP003',quantity:60,unit_price:459000,total_amount:27540000,reason:'Xuất bán - Chi nhánh',branch:'CN Đà Nẵng',export_date:daysAgo(15),staff_id:'NV002',note:''},
+    {id:'XK0004',product_id:'SP004',quantity:70,unit_price:549000,total_amount:38430000,reason:'Xuất bán - Chi nhánh',branch:'CN TP.HCM - Q7',export_date:daysAgo(14),staff_id:'NV001',note:''},
+    {id:'XK0005',product_id:'SP005',quantity:40,unit_price:349000,total_amount:13960000,reason:'Xuất bán - Chi nhánh',branch:'CN Hà Nội - Hoàn Kiếm',export_date:daysAgo(12),staff_id:'NV004',note:''},
+    {id:'XK0006',product_id:'SP006',quantity:30,unit_price:699000,total_amount:20970000,reason:'Chuyển kho',branch:'CN Hà Nội - Cầu Giấy',export_date:daysAgo(10),staff_id:'NV002',note:''},
+    {id:'XK0007',product_id:'SP007',quantity:90,unit_price:249000,total_amount:22410000,reason:'Xuất bán - Chi nhánh',branch:'CN Hải Phòng',export_date:daysAgo(9),staff_id:'NV003',note:''},
+    {id:'XK0008',product_id:'SP001',quantity:50,unit_price:299000,total_amount:14950000,reason:'Xuất bán - Chi nhánh',branch:'CN TP.HCM - Q1',export_date:daysAgo(7),staff_id:'NV001',note:''},
+    {id:'XK0009',product_id:'SP002',quantity:80,unit_price:199000,total_amount:15920000,reason:'Xuất bán - Chi nhánh',branch:'CN Hà Nội - Cầu Giấy',export_date:daysAgo(5),staff_id:'NV004',note:''},
+    {id:'XK0010',product_id:'SP008',quantity:20,unit_price:499000,total_amount:9980000,reason:'Hàng lỗi - Thanh lý',branch:'CN Hà Nội - Cầu Giấy',export_date:daysAgo(4),staff_id:'NV002',note:''},
+    {id:'XK0011',product_id:'SP010',quantity:60,unit_price:159000,total_amount:9540000,reason:'Hàng khuyến mãi',branch:'CN TP.HCM - Q1',export_date:daysAgo(3),staff_id:'NV003',note:''},
+    {id:'XK0012',product_id:'SP012',quantity:45,unit_price:399000,total_amount:17955000,reason:'Xuất bán - Chi nhánh',branch:'CN Đà Nẵng',export_date:daysAgo(2),staff_id:'NV001',note:''},
+  ];
+  for(const r of exportsData) await dbPut('exports',r);
+}
+
+// ════════════════════════════════════════════════════════
+//  Tính tồn kho (thay thế inventory_view)
+// ════════════════════════════════════════════════════════
+async function calcInventory(){
+  const [products, imports, exports] = await Promise.all([
+    dbGetAll('products'), dbGetAll('imports'), dbGetAll('exports')
+  ]);
+  return products.map(p=>{
+    const imported = imports.filter(r=>r.product_id===p.id && r.status==='completed')
+                            .reduce((s,r)=>s+r.quantity,0);
+    const exported = exports.filter(r=>r.product_id===p.id)
+                            .reduce((s,r)=>s+r.quantity,0);
+    const current  = imported - exported;
+    let stock_status = current <= 0 ? 'out' : current < p.min_stock ? 'low' : 'ok';
+    return {...p, total_imported:imported, total_exported:exported,
+            current_stock:current, stock_status,
+            stock_value: current * p.price};
+  });
+}
+
+// ════════════════════════════════════════════════════════
+//  AUTH
+// ════════════════════════════════════════════════════════
+async function doLogin(){
+  const username = document.getElementById('loginUser').value.trim();
+  const password = document.getElementById('loginPass').value.trim();
+  const errEl    = document.getElementById('loginErr');
+  errEl.style.display='none';
+
+  const users = await dbGetAll('users');
+  const user  = users.find(u=>u.username===username && u.password===password && u.status==='active');
+  if(!user){ errEl.textContent='Tên đăng nhập hoặc mật khẩu không đúng!'; errEl.style.display='block'; return; }
+
+  currentUser=user;
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('appLayout').style.display='flex';
+  document.getElementById('userNameDisplay').textContent=currentUser.name;
+  document.getElementById('avatarInitial').textContent=currentUser.name.split(' ').slice(-1)[0][0].toUpperCase();
+  const roleLabel = currentUser.role==='admin'?'Admin':currentUser.role==='quanly'?'Quản lý kho':'Nhân viên kho';
+  document.getElementById('sidebarUser').textContent=`${currentUser.name} (${roleLabel})`;
+
+  // Ẩn tất cả nav-role trước, rồi hiện đúng role
+  document.querySelectorAll('.nav-role').forEach(el=>{ el.style.display='none'; });
+  document.querySelectorAll('.nav-'+currentUser.role).forEach(el=>{ el.style.display='flex'; });
+
+  await loadCache();
+  // Admin chỉ vào trang users, còn lại vào dashboard
+  showPage(currentUser.role==='admin'?'users':'dashboard');
+  setInterval(updateDateTime,1000);
+  updateDateTime();
+}
+
+function doLogout(){
+  currentUser=null;
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('appLayout').style.display='none';
+}
+
+document.getElementById('loginPass').addEventListener('keydown',e=>{ if(e.key==='Enter') doLogin(); });
+
+async function loadCache(){
+  const [sp,ncc]=await Promise.all([dbGetAll('products'),dbGetAll('suppliers')]);
+  productsCache  = sp.filter(p=>p.status==='active');
+  suppliersCache = ncc.filter(s=>s.status==='active');
+  populateSelect('p-supplier-id', suppliersCache.map(s=>({value:s.id,label:s.name})));
+}
+
+// ════════════════════════════════════════════════════════
+//  DASHBOARD
+// ════════════════════════════════════════════════════════
+async function loadDashboard(){
+  const inv = await calcInventory();
+  const imports_all = await dbGetAll('imports');
+  const exports_all = await dbGetAll('exports');
+
+  const now = new Date();
+  const thisMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const imports_this_month = imports_all.filter(r=>r.import_date&&r.import_date.startsWith(thisMonth)).reduce((s,r)=>s+r.quantity,0);
+  const exports_this_month = exports_all.filter(r=>r.export_date&&r.export_date.startsWith(thisMonth)).reduce((s,r)=>s+r.quantity,0);
+
+  document.getElementById('stat-products').textContent = fmtNum(inv.length);
+  document.getElementById('stat-stock').textContent    = fmtNum(inv.reduce((s,p)=>s+p.current_stock,0));
+  document.getElementById('stat-imports').textContent  = fmtNum(imports_this_month);
+  document.getElementById('stat-exports').textContent  = fmtNum(exports_this_month);
+
+  const low_stock = inv.filter(p=>p.stock_status!=='ok');
+  const out = low_stock.filter(p=>p.stock_status==='out');
+  const low = low_stock.filter(p=>p.stock_status==='low');
+  let html='';
+  if(out.length) html+=`<div class="alert alert-danger">⚠ Có <b>${out.length}</b> sản phẩm hết hàng: ${out.slice(0,3).map(p=>p.name).join(', ')}</div>`;
+  if(low.length) html+=`<div class="alert alert-warning">⚡ Có <b>${low.length}</b> sản phẩm sắp hết hàng</div>`;
+  document.getElementById('dashAlerts').innerHTML=html;
+
+  
+
+
+
+  // Recent transactions
+  const users_all=await dbGetAll('users');
+  const userMap=Object.fromEntries(users_all.map(u=>[u.id,u.name]));
+  const prodMap=Object.fromEntries((await dbGetAll('products')).map(p=>[p.id,p.name]));
+  const recent=[
+    ...imports_all.map(r=>({tx_date:r.import_date,type:'import',product_name:prodMap[r.product_id]||r.product_id,quantity:r.quantity,staff_name:userMap[r.staff_id]||'—'})),
+    ...exports_all.map(r=>({tx_date:r.export_date,type:'export',product_name:prodMap[r.product_id]||r.product_id,quantity:r.quantity,staff_name:userMap[r.staff_id]||'—'})),
+  ].sort((a,b)=>b.tx_date.localeCompare(a.tx_date)).slice(0,10);
+
+  document.getElementById('recentTxBody').innerHTML=recent.map(tx=>`
+    <tr>
+      <td>${fmtDate(tx.tx_date)}</td>
+      <td>${tx.type==='import'?'<span class="badge badge-success">Nhập kho</span>':'<span class="badge badge-info">Xuất kho</span>'}</td>
+      <td>${tx.product_name}</td>
+      <td><b>${fmtNum(tx.quantity)}</b></td>
+      <td>${tx.staff_name}</td>
+    </tr>`).join('');
+}
+
+// ════════════════════════════════════════════════════════
+//  PRODUCTS
+// ════════════════════════════════════════════════════════
+async function loadProducts(){
+  const search   = (document.getElementById('searchProduct')?.value||'').toLowerCase();
+  const category = '';
+  const minPrice = 0;
+  const maxPrice = Infinity;
+  const supMap   = Object.fromEntries(suppliersCache.map(s=>[s.id,s.name]));
+
+  let data = await dbGetAll('products');
+  if(search) data=data.filter(p=>p.name.toLowerCase().includes(search)||p.id.toLowerCase().includes(search));
+
+  productsCache=data.filter(p=>p.status==='active');
+
+  document.getElementById('productTableBody').innerHTML = data.length
+    ? data.map(p=>`
+      <tr>
+        <td><span style="font-family:monospace;font-size:12px;color:var(--text-muted);">${p.id}</span></td>
+        <td><b>${p.name}</b></td>
+        <td><span class="badge badge-gray">${p.category}</span></td>
+        <td>${p.size||'—'}</td>
+        <td>${p.color||'—'}</td>
+        <td style="color:var(--primary);font-weight:600;">${fmtMoney(p.price)}</td>
+        <td style="font-size:12px;">${supMap[p.supplier_id]||'—'}</td>
+        <td>${p.status==='active'?'<span class="badge badge-success">Đang bán</span>':'<span class="badge badge-danger">Ngừng</span>'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm btn-secondary" style="margin-right:4px;" onclick="openEditProduct('${p.id}')">✏️ Sửa</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteProduct('${p.id}','${p.name.replace(/'/g,"\\'")}')">🗑 Xóa</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="9" class="text-center text-muted" style="padding:40px;">Không tìm thấy sản phẩm</td></tr>';
+}
+
+async function openEditProduct(pid){
+  const p=await dbGet('products',pid);
+  if(!p){ toast('Không tải được sản phẩm','error'); return; }
+  document.getElementById('ep-id').value   =p.id;
+  document.getElementById('ep-name').value =p.name;
+  document.getElementById('ep-cat').value  =p.category;
+  document.getElementById('ep-size').value =p.size||'';
+  document.getElementById('ep-color').value=p.color||'';
+  document.getElementById('ep-gender').value=p.gender||'Unisex';
+  document.getElementById('ep-price').value=p.price;
+  document.getElementById('ep-minstock').value=p.min_stock||20;
+  document.getElementById('ep-desc').value =p.description||'';
+  populateSelect('ep-supplier-id',suppliersCache.map(s=>({value:s.id,label:s.name})));
+  document.getElementById('ep-supplier-id').value=p.supplier_id||'';
+  openModal('editProduct');
+}
+
+async function saveEditProduct(){
+  const pid=document.getElementById('ep-id').value;
+  const existing=await dbGet('products',pid);
+  await dbPut('products',{...existing,
+    name:      document.getElementById('ep-name').value.trim(),
+    category:  document.getElementById('ep-cat').value,
+    size:      document.getElementById('ep-size').value,
+    color:     document.getElementById('ep-color').value,
+    gender:    document.getElementById('ep-gender').value,
+    price:     parseFloat(document.getElementById('ep-price').value),
+    supplier_id:document.getElementById('ep-supplier-id').value,
+    min_stock: parseInt(document.getElementById('ep-minstock').value)||20,
+    description:document.getElementById('ep-desc').value,
+  });
+  toast('Đã cập nhật sản phẩm!');
+  closeModal('editProduct');
+  loadProducts(); loadCache();
+}
+
+async function saveProduct(){
+  const name =document.getElementById('p-name').value.trim();
+  const price=parseFloat(document.getElementById('p-price').value);
+  if(!name||!price){ toast('Vui lòng điền tên và giá!','error'); return; }
+  const all=await dbGetAll('products');
+  const nums=all.map(r=>parseInt(r.id.replace('SP',''))||0);
+  const newId='SP'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0');
+  await dbPut('products',{
+    id:newId, name, category:document.getElementById('p-cat').value,
+    size:document.getElementById('p-size').value, color:document.getElementById('p-color').value,
+    gender:document.getElementById('p-gender').value, price,
+    supplier_id:document.getElementById('p-supplier-id').value,
+    min_stock:parseInt(document.getElementById('p-minstock').value)||20,
+    description:document.getElementById('p-desc').value,
+    status:'active',
+  });
+  toast('Đã thêm sản phẩm!');
+  closeModal('addProduct');
+  loadProducts(); loadCache();
+  ['p-name','p-size','p-color','p-price','p-desc'].forEach(id=>document.getElementById(id).value='');
+}
+
+async function deleteProduct(id,name){
+  if(!confirm(`Bạn có chắc muốn xóa sản phẩm:\n"${name}"?`)) return;
+  const p=await dbGet('products',id);
+  await dbPut('products',{...p,status:'inactive'});
+  toast('Đã xóa sản phẩm!','warning');
+  loadProducts(); loadCache();
+}
+
+// ════════════════════════════════════════════════════════
+//  IMPORTS
+// ════════════════════════════════════════════════════════
+let importItems=[];
+
+function addImportItem(){
+  const pid   =document.getElementById('imp-product').value;
+  const qty   =parseInt(document.getElementById('imp-qty').value);
+  const uprice=parseFloat(document.getElementById('imp-price').value);
+  if(!pid||qty<=0||uprice<=0){ toast('Chọn sản phẩm và nhập đủ số lượng, đơn giá','error'); return; }
+  const prod=productsCache.find(p=>p.id===pid);
+  const existing=importItems.find(i=>i.pid===pid);
+  if(existing){ existing.qty+=qty; existing.total=existing.qty*uprice; }
+  else { importItems.push({pid,name:prod?.name||pid,qty,uprice,total:qty*uprice}); }
+  renderImportItems();
+  document.getElementById('imp-qty').value='';
+}
+
+function removeImportItem(idx){ importItems.splice(idx,1); renderImportItems(); }
+
+function renderImportItems(){
+  const tbody=document.getElementById('importItemsBody');
+  const grandTotal=importItems.reduce((s,i)=>s+i.total,0);
+  tbody.innerHTML=importItems.length
+    ? importItems.map((item,i)=>`
+      <tr>
+        <td style="font-size:12px;">${item.pid}</td>
+        <td>${item.name}</td>
+        <td>${fmtNum(item.qty)}</td>
+        <td>${fmtMoney(item.uprice)}</td>
+        <td style="color:var(--success);font-weight:600;">${fmtMoney(item.total)}</td>
+        <td><button class="btn btn-sm btn-danger" onclick="removeImportItem(${i})">✕</button></td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" class="text-center text-muted" style="padding:16px;">Chưa có sản phẩm nào</td></tr>';
+  // Cập nhật tổng tiền hiển thị
+  const grandTotalEl=document.getElementById('imp-grand-total');
+  if(grandTotalEl) grandTotalEl.textContent=fmtMoney(grandTotal);
+}
+
+function fillImportPrice(){
+  const pid=document.getElementById('imp-product')?.value;
+  const prod=productsCache.find(p=>p.id===pid);
+  if(prod) document.getElementById('imp-price').value=Math.round(prod.price*0.6);
+  calcImportTotal();
+}
+
+function calcImportTotal(){
+  const q=parseInt(document.getElementById('imp-qty')?.value)||0;
+  const p=parseFloat(document.getElementById('imp-price')?.value)||0;
+  document.getElementById('imp-preview-total').textContent=fmtMoney(q*p);
+}
+
+// Lưu sản phẩm mới từ modal nhập kho (giống hệt saveProduct)
+async function saveProductFromImport(){
+  const name =document.getElementById('pi-name').value.trim();
+  const price=parseFloat(document.getElementById('pi-price').value);
+  if(!name||!price){ toast('Vui lòng điền tên và giá!','error'); return; }
+  const all=await dbGetAll('products');
+  const nums=all.map(r=>parseInt(r.id.replace('SP',''))||0);
+  const newId='SP'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0');
+  await dbPut('products',{
+    id:newId, name, category:document.getElementById('pi-cat').value,
+    size:document.getElementById('pi-size').value, color:document.getElementById('pi-color').value,
+    gender:document.getElementById('pi-gender').value, price,
+    supplier_id:document.getElementById('pi-supplier-id').value,
+    min_stock:parseInt(document.getElementById('pi-minstock').value)||20,
+    description:document.getElementById('pi-desc').value,
+    status:'active',
+  });
+  toast('Đã thêm sản phẩm!');
+  closeModal('addProductFromImport');
+  
+  // Refresh cache và cập nhật dropdown trong modal nhập kho
+  productsCache=await dbGetAll('products');
+  populateSelect('imp-product',productsCache.map(p=>({value:p.id,label:`${p.id} - ${p.name}`})));
+  document.getElementById('imp-product').value=newId;
+  fillImportPrice();
+  
+  // Reset form
+  ['pi-name','pi-size','pi-color','pi-price','pi-desc'].forEach(id=>document.getElementById(id).value='');
+}
+
+async function loadImports(){
+  const search   =(document.getElementById('searchImport')?.value||'').toLowerCase();
+  const date_from= document.getElementById('importDateFrom')?.value||'';
+  const date_to  = document.getElementById('importDateTo')?.value||'';
+  const supMap   = Object.fromEntries(suppliersCache.map(s=>[s.id,s.name]));
+  const prodMap  = Object.fromEntries((await dbGetAll('products')).map(p=>[p.id,p.name]));
+  const userMap  = Object.fromEntries((await dbGetAll('users')).map(u=>[u.id,u.name]));
+
+  let data=await dbGetAll('imports');
+  data=data.sort((a,b)=>b.import_date.localeCompare(a.import_date));
+  if(search) data=data.filter(r=>(r.import_code||r.id).toLowerCase().includes(search));
+  if(date_from) data=data.filter(r=>r.import_date>=date_from);
+  if(date_to)   data=data.filter(r=>r.import_date<=date_to);
+
+  const getStatusBadge=(status)=>{
+    switch(status){
+      case 'completed': return '<span class="badge badge-success">Hoàn thành</span>';
+      case 'pending': return '<span class="badge badge-warning">Chờ duyệt</span>';
+      case 'cancelled': return '<span class="badge badge-danger">Hủy</span>';
+      default: return '<span class="badge badge-gray">Không xác định</span>';
+    }
+  };
+
+  document.getElementById('importTableBody').innerHTML=data.length
+    ? data.map(r=>`
+      <tr>
+        <td><span style="font-family:monospace;font-size:12px;">${r.import_code||r.id}</span></td>
+        <td>${fmtDate(r.import_date)}</td>
+        <td style="font-size:12px;">${supMap[r.supplier_id]||'—'}</td>
+        <td><b>${r.items?r.items.length:1}</b> SP</td>
+        <td style="color:var(--success);font-weight:600;">${fmtMoney(r.total_amount||0)}</td>
+        <td>${userMap[r.staff_id]||'—'}</td>
+        <td>${getStatusBadge(r.status)}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm btn-secondary" style="margin-right:4px;" onclick="openEditImport('${r.id}')">✏️ Sửa</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteImport('${r.id}')">🗑 Xóa</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" class="text-center text-muted" style="padding:40px;">Chưa có phiếu nhập</td></tr>';
+}
+
+async function openAddImport(){
+  importItems=[];
+  renderImportItems();
+  
+  // Load danh sách nhân viên từ database
+  const users=await dbGetAll('users');
+  const staffList=users.filter(u=>u.role==='nhanvien'||u.role==='admin').map(u=>({value:u.id,label:u.name}));
+  
+  // Generate mã phiếu tự động
+  const all=await dbGetAll('imports');
+  const nums=all.map(r=>parseInt(r.id?.replace('NK','')||r.import_code?.replace('NK',''))||0);
+  const nextNum=(nums.length?Math.max(...nums):0)+1;
+  const autoCode='NK'+String(nextNum).padStart(4,'0');
+  
+  // Set giá trị mặc định
+  document.getElementById('imp-code').value=autoCode;
+  document.getElementById('imp-date').value=todayStr();
+  document.getElementById('imp-status').value='pending';
+  document.getElementById('imp-qty').value='';
+  document.getElementById('imp-price').value='';
+  document.getElementById('imp-preview-total').textContent='0đ';
+  document.getElementById('imp-note').value='';
+  
+  // Populate selects
+  populateSelect('imp-product',productsCache.map(p=>({value:p.id,label:`${p.id} - ${p.name}`})));
+  populateSelect('imp-supplier',suppliersCache.map(s=>({value:s.id,label:s.name})));
+  populateSelect('imp-staff',staffList.length?staffList:[{value:currentUser.id,label:currentUser.name}]);
+  document.getElementById('imp-staff').value=currentUser.id;
+  
+  // Populate supplier cho modal thêm sản phẩm từ nhập kho
+  populateSelect('pi-supplier-id',suppliersCache.map(s=>({value:s.id,label:s.name})));
+  
+  openModal('addImport');
+}
+
+async function saveImport(){
+  // Bước 3: Lấy thông tin từ form
+  const import_code=document.getElementById('imp-code').value.trim();
+  const import_date=document.getElementById('imp-date').value;
+  const supplier_id=document.getElementById('imp-supplier').value;
+  const staff_id=document.getElementById('imp-staff').value;
+  const status=document.getElementById('imp-status').value;
+  const note=document.getElementById('imp-note').value;
+  
+  // Bước 4: Kiểm tra tính hợp lệ của dữ liệu
+  if(!import_code){ toast('Vui lòng nhập mã phiếu!','error'); return; }
+  if(!import_date){ toast('Vui lòng chọn ngày nhập!','error'); return; }
+  if(!supplier_id){ toast('Vui lòng chọn nhà cung cấp!','error'); return; }
+  if(!staff_id){ toast('Vui lòng chọn nhân viên!','error'); return; }
+  if(!importItems.length){ toast('Thêm ít nhất 1 sản phẩm vào phiếu!','error'); return; }
+  
+  // Kiểm tra mã phiếu đã tồn tại chưa
+  const all=await dbGetAll('imports');
+  const existing=all.find(r=>r.import_code===import_code||r.id===import_code);
+  if(existing){ toast('Mã phiếu đã tồn tại! Vui lòng nhập mã khác.','error'); return; }
+  
+  // Tính tổng tiền phiếu
+  const grandTotal=importItems.reduce((s,i)=>s+i.total,0);
+  
+  // Bước 5 & 6: Lưu phiếu nhập và cập nhật tồn kho
+  const importId='NK'+String(Date.now()).slice(-8);
+  
+  // Lưu phiếu nhập chính
+  await dbPut('imports',{
+    id:importId,
+    import_code:import_code,
+    import_date:import_date,
+    supplier_id:supplier_id,
+    staff_id:staff_id,
+    status:status,
+    note:note,
+    total_amount:grandTotal,
+    items:importItems, // Lưu danh sách sản phẩm
+    created_at:new Date().toISOString()
+  });
+  
+  // Cập nhật tồn kho nếu trạng thái là 'completed'
+  if(status==='completed'){
+    for(const item of importItems){
+      const prod=await dbGet('products',item.pid);
+      if(prod){
+        prod.stock=(prod.stock||0)+item.qty;
+        await dbPut('products',prod);
+      }
+    }
+    // Refresh cache sản phẩm
+    productsCache=await dbGetAll('products');
+  }
+  
+  // Bước 7 & 8: Hiển thị thông báo thành công
+  toast('Tạo phiếu nhập thành công!','success');
+  closeModal('addImport');
+  loadImports();
+  loadDashboard();
+}
+
+async function openEditImport(id){
+  const r=await dbGet('imports',id);
+  if(!r){ toast('Không tải được phiếu','error'); return; }
+  document.getElementById('ei-id').value   =r.id;
+  document.getElementById('ei-date').value =r.import_date||'';
+  document.getElementById('ei-qty').value  =r.quantity;
+  document.getElementById('ei-price').value=r.unit_price;
+  document.getElementById('ei-note').value =r.note||'';
+  populateSelect('ei-product',productsCache.map(p=>({value:p.id,label:`${p.id} - ${p.name}`})));
+  populateSelect('ei-supplier',suppliersCache.map(s=>({value:s.id,label:s.name})));
+  document.getElementById('ei-product').value =r.product_id;
+  document.getElementById('ei-supplier').value=r.supplier_id;
+  calcEditImportTotal();
+  openModal('editImport');
+}
+
+function calcEditImportTotal(){
+  const q=parseInt(document.getElementById('ei-qty')?.value)||0;
+  const p=parseFloat(document.getElementById('ei-price')?.value)||0;
+  document.getElementById('ei-total').value=fmtMoney(q*p);
+}
+
+async function saveEditImport(){
+  const id=document.getElementById('ei-id').value;
+  const existing=await dbGet('imports',id);
+  const qty  =parseInt(document.getElementById('ei-qty').value);
+  const price=parseFloat(document.getElementById('ei-price').value);
+  await dbPut('imports',{...existing,
+    product_id: document.getElementById('ei-product').value,
+    quantity:   qty, unit_price:price, total_amount:qty*price,
+    supplier_id:document.getElementById('ei-supplier').value,
+    import_date:document.getElementById('ei-date').value,
+    note:       document.getElementById('ei-note').value,
+  });
+  toast('Đã cập nhật phiếu nhập!');
+  closeModal('editImport');
+  loadImports();
+}
+
+async function deleteImport(id){
+  if(!confirm(`Bạn có chắc muốn xóa phiếu nhập ${id}?`)) return;
+  await dbDelete('imports',id);
+  toast('Đã xóa phiếu nhập!','warning');
+  loadImports();
+}
+
+// ════════════════════════════════════════════════════════
+//  EXPORTS
+// ════════════════════════════════════════════════════════
+function fillExportPrice(){
+  const pid =document.getElementById('exp-product')?.value;
+  const prod=productsCache.find(p=>p.id===pid);
+  if(prod) document.getElementById('exp-price').value=prod.price;
+  calcExportTotal();
+}
+
+function calcExportTotal(){
+  const q=parseInt(document.getElementById('exp-qty')?.value)||0;
+  const p=parseFloat(document.getElementById('exp-price')?.value)||0;
+  document.getElementById('exp-total').value=fmtMoney(q*p);
+}
+
+function openAddExport(){
+  document.getElementById('exp-date').value=todayStr();
+  populateSelect('exp-product',productsCache.map(p=>({value:p.id,label:`${p.id} - ${p.name}`})));
+  fillExportPrice();
+  openModal('addExport');
+}
+
+async function loadExports(){
+  const search   =(document.getElementById('searchExport')?.value||'').toLowerCase();
+  const date_from= document.getElementById('exportDateFrom')?.value||'';
+  const date_to  = document.getElementById('exportDateTo')?.value||'';
+  const prodMap  = Object.fromEntries((await dbGetAll('products')).map(p=>[p.id,p.name]));
+  const userMap  = Object.fromEntries((await dbGetAll('users')).map(u=>[u.id,u.name]));
+
+  let data=await dbGetAll('exports');
+  data=data.sort((a,b)=>b.export_date.localeCompare(a.export_date));
+  if(search) data=data.filter(r=>r.id.toLowerCase().includes(search)||prodMap[r.product_id]?.toLowerCase().includes(search));
+  if(date_from) data=data.filter(r=>r.export_date>=date_from);
+  if(date_to)   data=data.filter(r=>r.export_date<=date_to);
+
+  document.getElementById('exportTableBody').innerHTML=data.length
+    ? data.map(r=>`
+      <tr>
+        <td><span style="font-family:monospace;font-size:12px;">${r.id}</span></td>
+        <td>${fmtDate(r.export_date)}</td>
+        <td>${prodMap[r.product_id]||r.product_id}</td>
+        <td><b>${fmtNum(r.quantity)}</b></td>
+        <td>${fmtMoney(r.unit_price)}</td>
+        <td style="color:var(--primary);font-weight:600;">${fmtMoney(r.total_amount)}</td>
+        <td><span class="badge badge-info">${r.reason||'—'}</span></td>
+        <td style="font-size:12px;">${r.branch||'—'}</td>
+        <td>${userMap[r.staff_id]||'—'}</td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-sm btn-secondary" style="margin-right:4px;" onclick="openEditExport('${r.id}')">✏️ Sửa</button>
+          <button class="btn btn-sm btn-danger" onclick="deleteExport('${r.id}')">🗑 Xóa</button>
+        </td>
+      </tr>`).join('')
+    : '<tr><td colspan="10" class="text-center text-muted" style="padding:40px;">Chưa có phiếu xuất</td></tr>';
+}
+
+async function saveExport(){
+  const product_id =document.getElementById('exp-product').value;
+  const quantity   =parseInt(document.getElementById('exp-qty').value);
+  const unit_price =parseFloat(document.getElementById('exp-price').value);
+  const export_date=document.getElementById('exp-date').value;
+  if(!product_id||!quantity||!unit_price||!export_date){ toast('Vui lòng điền đầy đủ!','error'); return; }
+
+  const all=await dbGetAll('exports');
+  const nums=all.map(r=>parseInt(r.id.replace('XK',''))||0);
+  const newId='XK'+String((nums.length?Math.max(...nums):0)+1).padStart(4,'0');
+  await dbPut('exports',{
+    id:newId, product_id, quantity, unit_price,
+    total_amount:quantity*unit_price,
+    reason:document.getElementById('exp-reason').value,
+    branch:document.getElementById('exp-branch').value,
+    export_date, note:document.getElementById('exp-note').value,
+    staff_id:currentUser.id,
+  });
+  toast('Đã tạo phiếu xuất!');
+  closeModal('addExport');
+  loadExports();
+  ['exp-qty','exp-price','exp-total','exp-note'].forEach(id=>document.getElementById(id).value='');
+}
+
+async function openEditExport(id){
+  const r=await dbGet('exports',id);
+  if(!r){ toast('Không tải được phiếu','error'); return; }
+  document.getElementById('ee-id').value    =r.id;
+  document.getElementById('ee-date').value  =r.export_date||'';
+  document.getElementById('ee-qty').value   =r.quantity;
+  document.getElementById('ee-price').value =r.unit_price;
+  document.getElementById('ee-note').value  =r.note||'';
+  document.getElementById('ee-reason').value=r.reason||'Xuất bán - Chi nhánh';
+  document.getElementById('ee-branch').value=r.branch||'CN Hà Nội - Cầu Giấy';
+  populateSelect('ee-product',productsCache.map(p=>({value:p.id,label:`${p.id} - ${p.name}`})));
+  document.getElementById('ee-product').value=r.product_id;
+  calcEditExportTotal();
+  openModal('editExport');
+}
+
+function calcEditExportTotal(){
+  const q=parseInt(document.getElementById('ee-qty')?.value)||0;
+  const p=parseFloat(document.getElementById('ee-price')?.value)||0;
+  document.getElementById('ee-total').value=fmtMoney(q*p);
+}
+
+async function saveEditExport(){
+  const id=document.getElementById('ee-id').value;
+  const existing=await dbGet('exports',id);
+  const qty  =parseInt(document.getElementById('ee-qty').value);
+  const price=parseFloat(document.getElementById('ee-price').value);
+  await dbPut('exports',{...existing,
+    product_id: document.getElementById('ee-product').value,
+    quantity:qty, unit_price:price, total_amount:qty*price,
+    export_date:document.getElementById('ee-date').value,
+    reason:     document.getElementById('ee-reason').value,
+    branch:     document.getElementById('ee-branch').value,
+    note:       document.getElementById('ee-note').value,
+  });
+  toast('Đã cập nhật phiếu xuất!');
+  closeModal('editExport');
+  loadExports();
+}
+
+async function deleteExport(id){
+  if(!confirm(`Bạn có chắc muốn xóa phiếu xuất ${id}?`)) return;
+  await dbDelete('exports',id);
+  toast('Đã xóa phiếu xuất!','warning');
+  loadExports();
+}
+
+// ════════════════════════════════════════════════════════
+//  INVENTORY
+// ════════════════════════════════════════════════════════
+async function loadInventory(){
+  const search  =(document.getElementById('searchInventory')?.value||'').toLowerCase();
+  const status  = document.getElementById('filterStockStatus')?.value||'';
+  const category= document.getElementById('filterInvCategory')?.value||'';
+
+  let data=await calcInventory();
+  if(search)   data=data.filter(p=>p.name.toLowerCase().includes(search)||p.id.toLowerCase().includes(search));
+  if(status)   data=data.filter(p=>p.stock_status===status);
+  if(category) data=data.filter(p=>p.category===category);
+
+  document.getElementById('inventoryTableBody').innerHTML=data.length
+    ? data.map(p=>`
+      <tr>
+        <td><span style="font-family:monospace;font-size:12px;color:var(--text-muted);">${p.id}</span></td>
+        <td><b>${p.name}</b></td>
+        <td><span class="badge badge-gray">${p.category}</span></td>
+        <td style="color:var(--success);">${fmtNum(p.total_imported)}</td>
+        <td style="color:var(--danger);">${fmtNum(p.total_exported)}</td>
+        <td style="font-weight:700;font-size:15px;">${fmtNum(p.current_stock)}</td>
+        <td>${fmtNum(p.min_stock)}</td>
+        <td>${stockBadge(p.stock_status)}</td>
+      </tr>`).join('')
+    : '<tr><td colspan="8" class="text-center text-muted" style="padding:40px;">Không có dữ liệu</td></tr>';
+}
+
+// ════════════════════════════════════════════════════════
+//  STOCK CHECK
+// ════════════════════════════════════════════════════════
+function renderStockCheckEmpty(){
+  document.getElementById('stockCheckResult').innerHTML=
+    `<div class="empty-state"><div class="empty-icon">📋</div><p>Nhấn "Chạy kiểm kê" để bắt đầu</p></div>`;
+}
+
+async function runStockCheck(){
+  const data=await calcInventory();
+  const now=new Date().toLocaleDateString('vi-VN');
+  let html=`<div class="alert alert-warning">📋 Kết quả kiểm kê ngày ${now} — Người thực hiện: ${currentUser.name}</div>
+  <div class="card"><div class="table-wrap"><table>
+  <thead><tr><th>Mã SP</th><th>Tên SP</th><th>Tổng nhập</th><th>Tổng xuất</th><th>Tồn kho</th><th>Mức tối thiểu</th><th>Chênh lệch</th><th>Đánh giá</th></tr></thead><tbody>`;
+  data.forEach(p=>{
+    const diff=p.current_stock-p.min_stock;
+    const ev=p.stock_status==='out'?'<span class="badge badge-danger">Hết hàng</span>'
+             :p.stock_status==='low'?'<span class="badge badge-warning">Cần nhập thêm</span>'
+             :'<span class="badge badge-success">Đạt yêu cầu</span>';
+    html+=`<tr>
+      <td style="font-family:monospace;font-size:12px;">${p.id}</td>
+      <td><b>${p.name}</b></td>
+      <td style="color:var(--success);">${fmtNum(p.total_imported)}</td>
+      <td style="color:var(--danger);">${fmtNum(p.total_exported)}</td>
+      <td style="font-weight:700;">${fmtNum(p.current_stock)}</td>
+      <td>${fmtNum(p.min_stock)}</td>
+      <td style="color:${diff>=0?'var(--success)':'var(--danger)'};font-weight:600;">${diff>=0?'+':''}${fmtNum(diff)}</td>
+      <td>${ev}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div></div>';
+  document.getElementById('stockCheckResult').innerHTML=html;
+  toast('Kiểm kê hoàn tất!');
+}
+
+// ════════════════════════════════════════════════════════
+//  USERS
+// ════════════════════════════════════════════════════════
+async function loadUsers(){
+  const search=(document.getElementById('searchUser')?.value||'').toLowerCase();
+  const role  = document.getElementById('filterUserRole')?.value||'';
+  const status= document.getElementById('filterUserStatus')?.value||'';
+
+  let data=await dbGetAll('users');
+  if(search) data=data.filter(u=>u.name.toLowerCase().includes(search)||u.email.toLowerCase().includes(search)||u.username.toLowerCase().includes(search));
+  if(role)   data=data.filter(u=>u.role===role);
+  if(status) data=data.filter(u=>u.status===status);
+
+  document.getElementById('usersTableBody').innerHTML=data.map(u=>`
+    <tr>
+      <td><span style="font-family:monospace;font-size:12px;">${u.id}</span></td>
+      <td><b>${u.name}</b></td>
+      <td style="font-size:12px;color:var(--text-muted);">${u.email}</td>
+      <td>${u.role==='admin'?'<span class="badge badge-info">Admin</span>':u.role==='quanly'?'<span class="badge badge-warning">Quản lý kho</span>':'<span class="badge badge-gray">Nhân viên kho</span>'}</td>
+      <td>${u.phone||'—'}</td>
+      <td>${fmtDate(u.join_date)}</td>
+      <td>${u.status==='active'?'<span class="badge badge-success">Đang làm</span>':'<span class="badge badge-danger">Nghỉ việc</span>'}</td>
+      <td style="white-space:nowrap;">
+        <button class="btn btn-sm btn-secondary" style="margin-right:4px;" onclick="openEditUser('${u.id}')">✏️ Sửa</button>
+        ${u.username!=='admin'?`<button class="btn btn-sm btn-danger" onclick="deleteUser('${u.id}','${u.name.replace(/'/g,"\\'")}')">🗑 Xóa</button>`:''}
+      </td>
+    </tr>`).join('');
+}
+
+async function saveUser(){
+  const name    =document.getElementById('u-name').value.trim();
+  const email   =document.getElementById('u-email').value.trim();
+  const username=document.getElementById('u-username').value.trim();
+  const password=document.getElementById('u-pass').value.trim();
+  if(!name||!email||!username||!password){ toast('Vui lòng điền đầy đủ!','error'); return; }
+  const all=await dbGetAll('users');
+  if(all.find(u=>u.username===username)){ toast('Tên đăng nhập đã tồn tại!','error'); return; }
+  const nums=all.map(r=>parseInt(r.id.replace('NV',''))||0);
+  const newId='NV'+String((nums.length?Math.max(...nums):0)+1).padStart(3,'0');
+  await dbPut('users',{
+    id:newId, name, email, username, password,
+    role:  document.getElementById('u-role').value,
+    phone: document.getElementById('u-phone').value,
+    join_date:todayStr(), status:'active',
+  });
+  toast('Đã thêm nhân viên!');
+  closeModal('addUser');
+  loadUsers();
+  ['u-name','u-email','u-username','u-pass','u-phone'].forEach(id=>document.getElementById(id).value='');
+}
+
+async function openEditUser(id){
+  const u=await dbGet('users',id);
+  if(!u){ toast('Không tải được tài khoản','error'); return; }
+  document.getElementById('eu-id').value    =u.id;
+  document.getElementById('eu-name').value  =u.name;
+  document.getElementById('eu-email').value =u.email;
+  document.getElementById('eu-phone').value =u.phone||'';
+  document.getElementById('eu-role').value  =u.role;
+  document.getElementById('eu-status').value=u.status;
+  document.getElementById('eu-pass').value  ='';
+  openModal('editUser');
+}
+
+async function saveEditUser(){
+  const id=document.getElementById('eu-id').value;
+  const existing=await dbGet('users',id);
+  const newPass=document.getElementById('eu-pass').value.trim();
+  await dbPut('users',{...existing,
+    name:   document.getElementById('eu-name').value.trim(),
+    email:  document.getElementById('eu-email').value.trim(),
+    phone:  document.getElementById('eu-phone').value.trim(),
+    role:   document.getElementById('eu-role').value,
+    status: document.getElementById('eu-status').value,
+    ...(newPass?{password:newPass}:{}),
+  });
+  toast('Đã cập nhật tài khoản!');
+  closeModal('editUser');
+  loadUsers();
+}
+
+async function deleteUser(id,name){
+  if(!confirm(`Bạn có chắc muốn xóa tài khoản:\n"${name}"?`)) return;
+  await dbDelete('users',id);
+  toast('Đã xóa tài khoản!','warning');
+  loadUsers();
+}
+
+// ════════════════════════════════════════════════════════
+//  REPORT
+// ════════════════════════════════════════════════════════
+async function loadReport(){
+  const inv      = await calcInventory();
+  const importsA = await dbGetAll('imports');
+  const exportsA = await dbGetAll('exports');
+  const supMap   = Object.fromEntries(suppliersCache.map(s=>[s.id,s.name]));
+  const prodMap  = Object.fromEntries((await dbGetAll('products')).map(p=>[p.id,p.name]));
+
+  const import_value = importsA.reduce((s,r)=>s+r.total_amount,0);
+  const export_value = exportsA.reduce((s,r)=>s+r.total_amount,0);
+
+  document.getElementById('rep-import-val').textContent=fmtMoney(import_value);
+  document.getElementById('rep-export-val').textContent=fmtMoney(export_value);
+  document.getElementById('rep-import-cnt').textContent=fmtNum(importsA.length);
+  document.getElementById('rep-export-cnt').textContent=fmtNum(exportsA.length);
+
+  // Monthly
+  const months={};
+  importsA.forEach(r=>{ const m=r.import_date?.slice(0,7); if(!m) return; if(!months[m]) months[m]={i:0,e:0}; months[m].i+=r.total_amount||0; });
+  exportsA.forEach(r=>{ const m=r.export_date?.slice(0,7); if(!m) return; if(!months[m]) months[m]={i:0,e:0}; months[m].e+=r.total_amount||0; });
+  const mKeys=Object.keys(months).sort().slice(-6);
+  const maxM=Math.max(1,...mKeys.flatMap(k=>[months[k].i,months[k].e]));
+  document.getElementById('repChartMonthly').innerHTML=`
+    <div style="display:flex;align-items:flex-end;gap:10px;height:120px;padding-bottom:20px;">
+      ${mKeys.map(k=>{
+        const hI=Math.max(4,Math.round((months[k].i/maxM)*110));
+        const hE=Math.max(4,Math.round((months[k].e/maxM)*110));
+        return `<div style="display:flex;flex-direction:column;align-items:center;gap:3px;flex:1;">
+          <div style="display:flex;align-items:flex-end;gap:3px;height:110px;">
+            <div style="width:18px;height:${hI}px;background:var(--success);border-radius:3px 3px 0 0;opacity:.85;" title="${fmtMoney(months[k].i)}"></div>
+            <div style="width:18px;height:${hE}px;background:var(--primary);border-radius:3px 3px 0 0;opacity:.85;" title="${fmtMoney(months[k].e)}"></div>
+          </div>
+          <span style="font-size:10px;color:var(--text-muted);">${k.slice(5)}/${k.slice(2,4)}</span>
+        </div>`;
+      }).join('')}
+    </div>
+    <div style="display:flex;gap:16px;margin-top:8px;">
+      <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:12px;height:12px;background:var(--success);border-radius:2px;display:inline-block;"></span>Nhập</span>
+      <span style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:12px;height:12px;background:var(--primary);border-radius:2px;display:inline-block;"></span>Xuất</span>
+    </div>`;
+
+  // Category
+  const cats={};
+  inv.forEach(p=>{ if(!cats[p.category]) cats[p.category]=0; cats[p.category]+=p.current_stock; });
+  const catArr=Object.entries(cats).map(([k,v])=>({category:k,total_stock:v})).sort((a,b)=>b.total_stock-a.total_stock);
+  const colors=['var(--primary)','var(--info)','var(--success)','var(--warning)','#8b5cf6'];
+  const total=catArr.reduce((s,c)=>s+c.total_stock,0)||1;
+  document.getElementById('repCategoryChart').innerHTML=catArr.map((c,i)=>`
+    <div style="margin-bottom:12px;">
+      <div class="flex-between" style="margin-bottom:4px;">
+        <span style="font-size:13px;">${c.category}</span>
+        <span style="font-size:13px;font-weight:600;">${fmtNum(c.total_stock)} (${Math.round(c.total_stock/total*100)}%)</span>
+      </div>
+      <div class="stock-bar"><div class="stock-fill" style="width:${Math.round(c.total_stock/total*100)}%;background:${colors[i%5]};"></div></div>
+    </div>`).join('');
+
+  document.getElementById('repImportBody').innerHTML=importsA.slice(0,50).map(r=>
+    `<tr><td style="font-family:monospace;font-size:12px;">${r.id}</td><td>${fmtDate(r.import_date)}</td><td>${prodMap[r.product_id]||r.product_id}</td><td>${fmtNum(r.quantity)}</td><td style="color:var(--success);font-weight:600;">${fmtMoney(r.total_amount)}</td><td style="font-size:12px;">${supMap[r.supplier_id]||'—'}</td></tr>`
+  ).join('');
+
+  document.getElementById('repExportBody').innerHTML=exportsA.slice(0,50).map(r=>
+    `<tr><td style="font-family:monospace;font-size:12px;">${r.id}</td><td>${fmtDate(r.export_date)}</td><td>${prodMap[r.product_id]||r.product_id}</td><td>${fmtNum(r.quantity)}</td><td style="color:var(--primary);font-weight:600;">${fmtMoney(r.total_amount)}</td><td style="font-size:12px;">${r.branch||'—'}</td></tr>`
+  ).join('');
+
+  document.getElementById('repProductBody').innerHTML=inv.map(p=>
+    `<tr><td style="font-family:monospace;font-size:12px;">${p.id}</td><td><b>${p.name}</b></td><td style="color:var(--success);">${fmtNum(p.total_imported)}</td><td style="color:var(--danger);">${fmtNum(p.total_exported)}</td><td style="font-weight:700;">${fmtNum(p.current_stock)}</td><td style="color:var(--primary);font-weight:600;">${fmtMoney(p.stock_value)}</td><td>${stockBadge(p.stock_status)}</td></tr>`
+  ).join('');
+}
+
+function switchReportTab(tabId,el){
+  document.querySelectorAll('#page-report .tab').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('#page-report .tab-content').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-'+tabId).classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════
+//  KHỞI ĐỘNG ỨNG DỤNG
+// ════════════════════════════════════════════════════════
+(async()=>{
+  DB = await openDB();
+  await seedData();
+  console.log('TokyoLife WMS — IndexedDB ready!');
+})();
+</script>
+</body>
+</html>
