@@ -21,6 +21,24 @@ const pool = new Pool({
 // Các bảng dữ liệu (tương đương với các store trong IndexedDB)
 const stores = ['users', 'suppliers', 'products', 'imports', 'exports'];
 
+// Tự động khởi tạo bảng nếu chưa có (Chạy 1 lần khi server khởi động)
+async function initDB() {
+  try {
+    for (const store of stores) {
+      await pool.query(`
+        CREATE TABLE IF NOT EXISTS ${store} (
+          id VARCHAR(50) PRIMARY KEY,
+          data JSONB NOT NULL
+        );
+      `);
+    }
+    console.log("Database tables initialized successfully!");
+  } catch (err) {
+    console.error("Failed to initialize database:", err);
+  }
+}
+initDB();
+
 // API: Lấy tất cả dữ liệu của một bảng
 app.get('/api/:store', async (req, res) => {
   const { store } = req.params;
